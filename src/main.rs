@@ -1,12 +1,15 @@
 use std::{fs::File, io::Write};
 
+pub mod vec3;
+
 fn render_to_file(image_width: u32, image_height: u32, filename: &str) {
     let open_result = File::create(filename);
     println!("Rendering to the file {filename}");
     match open_result {
         Ok(mut file) => {
             file.write("P3\n".as_bytes()).unwrap();
-            file.write_fmt(format_args!("{image_width} {image_height}\n")).unwrap();
+            file.write_fmt(format_args!("{image_width} {image_height}\n"))
+                .unwrap();
             file.write("255\n".as_bytes()).unwrap();
 
             for i in 0..image_height {
