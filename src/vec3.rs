@@ -20,7 +20,13 @@ impl Vec3 {
         self.len_squared().sqrt()
     }
 
-    // TODO: dot, cross
+    pub fn dot(&self, rhs: Self) -> f32 {
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    }
+
+    pub fn cross(&self, rhs: Self) -> Self {
+        todo!();
+    }
 }
 
 impl ops::Add for Vec3 {
@@ -261,6 +267,23 @@ mod tests {
                 z: 3.
             },
             vec
+        );
+    }
+
+    #[test]
+    fn dot_success() {
+        assert_eq!(
+            147.,
+            Vec3 {
+                x: 7.,
+                y: 7.,
+                z: 7.
+            }
+            .dot(Vec3 {
+                x: 7.,
+                y: 7.,
+                z: 7.
+            })
         );
     }
 }
