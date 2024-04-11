@@ -2,6 +2,16 @@ use std::{fs::File, io::Write};
 
 pub mod vec3;
 
+type Color = vec3::Vec3;
+
+fn write_color(file: &mut File, color: Color) {
+    let ir = (color.x * 255.999) as u32;
+    let ig = (color.y * 255.999) as u32;
+    let ib = (color.z * 255.999) as u32;
+
+    file.write_fmt(format_args!("{ir} {ig} {ib}\n")).unwrap();
+}
+
 fn render_to_file(image_width: u32, image_height: u32, filename: &str) {
     let open_result = File::create(filename);
     println!("Rendering to the file {filename}");
@@ -16,15 +26,13 @@ fn render_to_file(image_width: u32, image_height: u32, filename: &str) {
                 let remaining = image_height - i;
                 println!("Scanlines remaining: {remaining}");
                 for j in 0..image_width {
-                    let r: f32 = i as f32 / (image_width as f32 - 1.);
-                    let g: f32 = j as f32 / (image_height as f32 - 1.);
-                    let b: f32 = 0.;
+                    let color = Color {
+                        x: i as f32 / (image_width as f32 - 1.),
+                        y: j as f32 / (image_height as f32 - 1.),
+                        z: 0.,
+                    };
 
-                    let ir = (r * 255.999) as u32;
-                    let ig = (g * 255.999) as u32;
-                    let ib = (b * 255.999) as u32;
-
-                    file.write_fmt(format_args!("{ir} {ig} {ib}\n")).unwrap();
+                    write_color(&mut file, color);
                 }
             }
         }
