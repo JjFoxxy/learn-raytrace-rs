@@ -25,7 +25,11 @@ impl Vec3 {
     }
 
     pub fn cross(&self, rhs: Self) -> Self {
-        todo!();
+        Vec3 {
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.x,
+        }
     }
 }
 
@@ -283,6 +287,27 @@ mod tests {
                 x: 7.,
                 y: 7.,
                 z: 7.
+            })
+        );
+    }
+
+    #[test]
+    fn cross_success() {
+        assert_eq!(
+            Vec3 {
+                x: -3.,
+                y: 6.,
+                z: -3.
+            },
+            Vec3 {
+                x: 4.,
+                y: 5.,
+                z: 6.
+            }
+            .cross(Vec3 {
+                x: 7.,
+                y: 8.,
+                z: 9.
             })
         );
     }
