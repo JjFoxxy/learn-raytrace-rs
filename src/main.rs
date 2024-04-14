@@ -1,8 +1,14 @@
 use std::{fs::File, io::Write};
 
 pub mod vec3;
+pub mod ray;
 
-type Color = vec3::Vec3;
+use vec3::Vec3;
+
+use crate::ray::Ray;
+
+type Color = Vec3;
+type Point3 = Vec3;
 
 fn write_color(file: &mut File, color: Color) {
     let ir = (color.x * 255.999) as u32;
@@ -12,7 +18,35 @@ fn write_color(file: &mut File, color: Color) {
     file.write_fmt(format_args!("{ir} {ig} {ib}\n")).unwrap();
 }
 
-fn render_to_file(image_width: u32, image_height: u32, filename: &str) {
+fn ray_color(ray: ray::Ray) -> Color {
+    Color {x: 0., y: 0., z: 0.}
+}
+
+fn render_to_file(filename: &str) {
+    // Image
+    let aspect_ratio: f32 = 16. / 9.;
+    let image_width: u32 = 400;
+    let mut image_height: u32 = ((image_width as f32) / aspect_ratio) as u32;
+    if image_height == 0 {
+        image_height = 1;
+    }
+
+    // Camera
+    let focal_length:f32 = 1.0;
+    let viewport_height: f32 = 2.;
+    let viewport_width: f32 = viewport_height * ((image_width as f32) / (image_height as f32));
+    let camera_center = Point3 {x: 0., y: 0., z: 0.};
+
+    // Horizontal vector
+    let viewport_u = Vec3 { x: viewport_width, y: 0., z:0. };
+    let viewport_v = Vec3 { x: 0., y: -viewport_height, z:0. };
+
+    let pixel_delta_u = viewport_u / (image_width as f32);
+    let pixel_delta_v = viewport_v / (image_height as f32);
+
+    let viewport_upper_left = camera_center - Vec3 {x: 0., y: 0., z: focal_length} - viewport_u / 2. - viewport_v / 2.;
+    let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
     let open_result = File::create(filename);
     println!("Rendering to the file {filename}");
     match open_result {
@@ -26,13 +60,11 @@ fn render_to_file(image_width: u32, image_height: u32, filename: &str) {
                 let remaining = image_height - i;
                 println!("Scanlines remaining: {remaining}");
                 for j in 0..image_width {
-                    let color = Color {
-                        x: i as f32 / (image_width as f32 - 1.),
-                        y: j as f32 / (image_height as f32 - 1.),
-                        z: 0.,
-                    };
+                    let pixel_center = pixel00_loc + (j as f32 * pixel_delta_u) + (i as f32 * pixel_delta_v);
+                    let ray_direction = pixel_center - camera_center;
+                    let ray = Ray {orig: camera_center, dir: ray_direction};
 
-                    write_color(&mut file, color);
+                    write_color(&mut file, ray_color(ray));
                 }
             }
         }
@@ -44,8 +76,5 @@ fn render_to_file(image_width: u32, image_height: u32, filename: &str) {
 }
 
 fn main() {
-    let image_width: u32 = 256;
-    let image_height: u32 = 256;
-
-    render_to_file(image_width, image_height, "image.ppm");
+    render_to_file("image.ppm");
 }

@@ -79,6 +79,18 @@ impl ops::Mul<f32> for Vec3 {
     }
 }
 
+impl ops::Mul<Vec3> for f32 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Vec3 {
+        let mut res = rhs.clone();
+        res.x *= self;
+        res.y *= self;
+        res.z *= self;
+        res
+    }
+}
+
 impl ops::MulAssign<f32> for Vec3 {
     fn mul_assign(&mut self, rhs: f32) {
         self.x *= rhs;
@@ -219,6 +231,23 @@ mod tests {
                 y: 5.,
                 z: 4.
             } * 3.
+        );
+    }
+
+    #[test]
+    fn mul_left_success() {
+        assert_eq!(
+            Vec3 {
+                x: 18.,
+                y: 15.,
+                z: 12.
+            },
+            3. *
+            Vec3 {
+                x: 6.,
+                y: 5.,
+                z: 4.
+            }
         );
     }
 
