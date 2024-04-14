@@ -19,7 +19,9 @@ fn write_color(file: &mut File, color: Color) {
 }
 
 fn ray_color(ray: ray::Ray) -> Color {
-    Color {x: 0., y: 0., z: 0.}
+    let unit_direction = ray.dir.unit_vector();
+    let coeff = 0.5 * (unit_direction.y + 1.0);
+    (1.0 - coeff) * Color {x: 1.0, y: 1.0, z: 1.0} + coeff * Color {x: 0.5, y: 0.7, z: 1.0}
 }
 
 fn render_to_file(filename: &str) {
