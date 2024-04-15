@@ -19,7 +19,7 @@ fn write_color(file: &mut File, color: Color) {
 }
 
 fn ray_color(ray: &ray::Ray) -> Color {
-    if hit_sphere(
+    let t = hit_sphere(
         Point3 {
             x: 0.,
             y: 0.,
@@ -27,12 +27,21 @@ fn ray_color(ray: &ray::Ray) -> Color {
         },
         0.5,
         ray,
-    ) {
-        return Color {
-            x: 1.0,
-            y: 0.,
-            z: 0.,
-        };
+    );
+    if t > 0. {
+        let n = (ray.at(t)
+            - Vec3 {
+                x: 0.,
+                y: 0.,
+                z: -1.,
+            })
+        .unit_vector();
+        return 0.5
+            * Color {
+                x: n.x + 1.,
+                y: n.y + 1.,
+                z: n.z + 1.,
+            };
     }
     let unit_direction = ray.dir.unit_vector();
     let coeff = 0.5 * (unit_direction.y + 1.0);
@@ -50,13 +59,17 @@ fn ray_color(ray: &ray::Ray) -> Color {
             }
 }
 
-fn hit_sphere(center: Point3, radius: f32, ray: &Ray) -> bool {
+fn hit_sphere(center: Point3, radius: f32, ray: &Ray) -> f32 {
     let origin_center = ray.orig - center;
     let a = ray.dir.dot(ray.dir);
     let b = 2.0 * origin_center.dot(ray.dir);
     let c = origin_center.dot(origin_center) - radius * radius;
     let discriminant = b * b - 4. * a * c;
-    discriminant >= 0.
+    if discriminant < 0. {
+        -1.
+    } else {
+        (-b - discriminant.sqrt()) / (2. * a)
+    }
 }
 
 fn render_to_file(filename: &str) {
