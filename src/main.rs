@@ -1,7 +1,7 @@
 use std::{fs::File, io::Write};
 
-pub mod vec3;
 pub mod ray;
+pub mod vec3;
 
 use vec3::Vec3;
 
@@ -18,10 +18,45 @@ fn write_color(file: &mut File, color: Color) {
     file.write_fmt(format_args!("{ir} {ig} {ib}\n")).unwrap();
 }
 
-fn ray_color(ray: ray::Ray) -> Color {
+fn ray_color(ray: &ray::Ray) -> Color {
+    if hit_sphere(
+        Point3 {
+            x: 0.,
+            y: 0.,
+            z: -1.,
+        },
+        0.5,
+        ray,
+    ) {
+        return Color {
+            x: 1.0,
+            y: 0.,
+            z: 0.,
+        };
+    }
     let unit_direction = ray.dir.unit_vector();
     let coeff = 0.5 * (unit_direction.y + 1.0);
-    (1.0 - coeff) * Color {x: 1.0, y: 1.0, z: 1.0} + coeff * Color {x: 0.5, y: 0.7, z: 1.0}
+    (1.0 - coeff)
+        * Color {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        }
+        + coeff
+            * Color {
+                x: 0.5,
+                y: 0.7,
+                z: 1.0,
+            }
+}
+
+fn hit_sphere(center: Point3, radius: f32, ray: &Ray) -> bool {
+    let origin_center = ray.orig - center;
+    let a = ray.dir.dot(ray.dir);
+    let b = 2.0 * origin_center.dot(ray.dir);
+    let c = origin_center.dot(origin_center) - radius * radius;
+    let discriminant = b * b - 4. * a * c;
+    discriminant >= 0.
 }
 
 fn render_to_file(filename: &str) {
@@ -34,19 +69,38 @@ fn render_to_file(filename: &str) {
     }
 
     // Camera
-    let focal_length:f32 = 1.0;
+    let focal_length: f32 = 1.0;
     let viewport_height: f32 = 2.;
     let viewport_width: f32 = viewport_height * ((image_width as f32) / (image_height as f32));
-    let camera_center = Point3 {x: 0., y: 0., z: 0.};
+    let camera_center = Point3 {
+        x: 0.,
+        y: 0.,
+        z: 0.,
+    };
 
     // Horizontal vector
-    let viewport_u = Vec3 { x: viewport_width, y: 0., z:0. };
-    let viewport_v = Vec3 { x: 0., y: -viewport_height, z:0. };
+    let viewport_u = Vec3 {
+        x: viewport_width,
+        y: 0.,
+        z: 0.,
+    };
+    let viewport_v = Vec3 {
+        x: 0.,
+        y: -viewport_height,
+        z: 0.,
+    };
 
     let pixel_delta_u = viewport_u / (image_width as f32);
     let pixel_delta_v = viewport_v / (image_height as f32);
 
-    let viewport_upper_left = camera_center - Vec3 {x: 0., y: 0., z: focal_length} - viewport_u / 2. - viewport_v / 2.;
+    let viewport_upper_left = camera_center
+        - Vec3 {
+            x: 0.,
+            y: 0.,
+            z: focal_length,
+        }
+        - viewport_u / 2.
+        - viewport_v / 2.;
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
     let open_result = File::create(filename);
@@ -62,11 +116,15 @@ fn render_to_file(filename: &str) {
                 let remaining = image_height - i;
                 println!("Scanlines remaining: {remaining}");
                 for j in 0..image_width {
-                    let pixel_center = pixel00_loc + (j as f32 * pixel_delta_u) + (i as f32 * pixel_delta_v);
+                    let pixel_center =
+                        pixel00_loc + (j as f32 * pixel_delta_u) + (i as f32 * pixel_delta_v);
                     let ray_direction = pixel_center - camera_center;
-                    let ray = Ray {orig: camera_center, dir: ray_direction};
+                    let ray = Ray {
+                        orig: camera_center,
+                        dir: ray_direction,
+                    };
 
-                    write_color(&mut file, ray_color(ray));
+                    write_color(&mut file, ray_color(&ray));
                 }
             }
         }
