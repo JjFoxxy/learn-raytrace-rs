@@ -3,12 +3,8 @@ use std::{fs::File, io::Write};
 pub mod ray;
 pub mod vec3;
 
-use vec3::Vec3;
-
 use crate::ray::Ray;
-
-type Color = Vec3;
-type Point3 = Vec3;
+use vec3::*;
 
 fn write_color(file: &mut File, color: Color) {
     let ir = (color.x * 255.999) as u32;
@@ -68,7 +64,7 @@ fn hit_sphere(center: Point3, radius: f32, ray: &Ray) -> f32 {
     if discriminant < 0. {
         -1.
     } else {
-        (-half_b- discriminant.sqrt()) / a
+        (-half_b - discriminant.sqrt()) / a
     }
 }
 
