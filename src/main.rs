@@ -1,10 +1,13 @@
 use std::{fs::File, io::Write};
 
+pub mod geometry;
 pub mod ray;
 pub mod vec3;
 
 use crate::ray::Ray;
 use vec3::*;
+
+use crate::geometry::HittableList;
 
 fn write_color(file: &mut File, color: Color) {
     let ir = (color.x * 255.999) as u32;
@@ -58,7 +61,7 @@ fn ray_color(ray: &ray::Ray) -> Color {
 fn hit_sphere(center: Point3, radius: f32, ray: &Ray) -> f32 {
     let origin_center = ray.orig - center;
     let a = ray.dir.len_squared();
-    let half_b = origin_center.dot(ray.dir);
+    let half_b = origin_center.dot(&ray.dir);
     let c = origin_center.len_squared() - radius * radius;
     let discriminant = half_b * half_b - a * c;
     if discriminant < 0. {

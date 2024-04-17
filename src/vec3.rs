@@ -23,16 +23,28 @@ impl Vec3 {
         self.len_squared().sqrt()
     }
 
-    pub fn dot(&self, rhs: Self) -> f32 {
+    pub fn dot(&self, rhs: &Self) -> f32 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
-    pub fn cross(&self, rhs: Self) -> Self {
+    pub fn cross(&self, rhs: &Self) -> Self {
         Vec3 {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
             z: self.x * rhs.y - self.y * rhs.x,
         }
+    }
+}
+
+impl ops::Neg for Vec3 {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        let mut res = self.clone();
+        res.x = -res.x;
+        res.y = -res.y;
+        res.z = -res.z;
+        res
     }
 }
 
@@ -314,7 +326,7 @@ mod tests {
                 y: 7.,
                 z: 7.
             }
-            .dot(Vec3 {
+            .dot(&Vec3 {
                 x: 7.,
                 y: 7.,
                 z: 7.
@@ -335,7 +347,7 @@ mod tests {
                 y: 5.,
                 z: 6.
             }
-            .cross(Vec3 {
+            .cross(&Vec3 {
                 x: 7.,
                 y: 8.,
                 z: 9.
