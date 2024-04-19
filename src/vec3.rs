@@ -3,7 +3,7 @@ use std::ops;
 pub type Color = Vec3;
 pub type Point3 = Vec3;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,

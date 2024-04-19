@@ -1,11 +1,12 @@
 use crate::ray::Ray;
 use crate::vec3::*;
 
-struct HitRecord {
-    point: Point3,
-    normal: Vec3,
-    t: f32,
-    front_face: bool,
+#[derive(Default)]
+pub struct HitRecord {
+    pub point: Point3,
+    pub normal: Vec3,
+    pub t: f32,
+    pub front_face: bool,
 }
 
 impl HitRecord {
@@ -20,8 +21,8 @@ impl HitRecord {
     }
 }
 
-trait Hittable {
-    fn hit(&self, ray: &mut Ray, ray_tmin: f32, ray_tmax: f32, record: &mut HitRecord) -> bool;
+pub trait Hittable {
+    fn hit(&self, ray: &mut Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord>;
 }
 
 pub struct HittableList<'a> {
@@ -29,22 +30,43 @@ pub struct HittableList<'a> {
 }
 
 impl<'a> HittableList<'a> {
-    fn clear(&mut self) {
+    pub fn new() -> Self {
+        HittableList {
+            objects: Vec::<Box<dyn Hittable + 'a>>::new(),
+        }
+    }
+
+    pub fn clear(&mut self) {
         self.objects.clear();
     }
 
-    fn add(&mut self, object: impl Hittable + 'a) {
+    pub fn add(&mut self, object: impl Hittable + 'a) {
         self.objects.push(Box::new(object));
+    }
+
+    pub fn hit(&self, ray: &mut Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord> {
+        let mut closest_so_far = ray_tmax;
+        let mut result: Option<HitRecord> = None;
+
+        for object in self.objects.iter() {
+            if let Some(record) = object.hit(ray, ray_tmin, closest_so_far) {
+                closest_so_far = record.t;
+                result = Some(record);
+            }
+        }
+
+        result
     }
 }
 
-struct Sphere {
-    center: Point3,
-    radius: f32,
+pub struct Sphere {
+    pub center: Point3,
+    pub radius: f32,
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &mut Ray, ray_tmin: f32, ray_tmax: f32, record: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &mut Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord> {
+        let mut record = HitRecord::default();
         let origin_center = ray.orig - self.center;
         let a = ray.dir.len_squared();
         let half_b = origin_center.dot(&ray.dir);
@@ -52,7 +74,7 @@ impl Hittable for Sphere {
 
         let discriminant = half_b * half_b - a * c;
         if discriminant < 0. {
-            return false;
+            return None;
         }
         let sqrtd = discriminant.sqrt();
 
@@ -60,7 +82,7 @@ impl Hittable for Sphere {
         if (root <= ray_tmin) || (ray_tmax <= root) {
             root = (-half_b + sqrtd) / a;
             if (root <= ray_tmin) || (ray_tmax <= root) {
-                return false;
+                return None;
             }
         }
 
@@ -69,6 +91,6 @@ impl Hittable for Sphere {
         let outward_normal = (record.point - self.center) / self.radius;
         record.set_face_normal(ray, &outward_normal);
 
-        return true;
+        return Some(record);
     }
 }

@@ -7,7 +7,7 @@ pub mod vec3;
 use crate::ray::Ray;
 use vec3::*;
 
-use crate::geometry::HittableList;
+use crate::geometry::*;
 
 fn write_color(file: &mut File, color: Color) {
     let ir = (color.x * 255.999) as u32;
@@ -17,31 +17,12 @@ fn write_color(file: &mut File, color: Color) {
     file.write_fmt(format_args!("{ir} {ig} {ib}\n")).unwrap();
 }
 
-fn ray_color(ray: &ray::Ray) -> Color {
-    let t = hit_sphere(
-        Point3 {
-            x: 0.,
-            y: 0.,
-            z: -1.,
-        },
-        0.5,
-        ray,
-    );
-    if t > 0. {
-        let n = (ray.at(t)
-            - Vec3 {
-                x: 0.,
-                y: 0.,
-                z: -1.,
-            })
-        .unit_vector();
+fn ray_color(ray: &mut ray::Ray, world: &mut HittableList) -> Color {
+    if let Some(record) = world.hit(ray, 0., f32::INFINITY) {
         return 0.5
-            * Color {
-                x: n.x + 1.,
-                y: n.y + 1.,
-                z: n.z + 1.,
-            };
+            * (record.normal + Color {x: 1., y: 1., z: 1.});
     }
+
     let unit_direction = ray.dir.unit_vector();
     let coeff = 0.5 * (unit_direction.y + 1.0);
     (1.0 - coeff)
@@ -58,20 +39,7 @@ fn ray_color(ray: &ray::Ray) -> Color {
             }
 }
 
-fn hit_sphere(center: Point3, radius: f32, ray: &Ray) -> f32 {
-    let origin_center = ray.orig - center;
-    let a = ray.dir.len_squared();
-    let half_b = origin_center.dot(&ray.dir);
-    let c = origin_center.len_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-    if discriminant < 0. {
-        -1.
-    } else {
-        (-half_b - discriminant.sqrt()) / a
-    }
-}
-
-fn render_to_file(filename: &str) {
+fn render_to_file(filename: &str, world: &mut HittableList) {
     // Image
     let aspect_ratio: f32 = 16. / 9.;
     let image_width: u32 = 400;
@@ -131,12 +99,12 @@ fn render_to_file(filename: &str) {
                     let pixel_center =
                         pixel00_loc + (j as f32 * pixel_delta_u) + (i as f32 * pixel_delta_v);
                     let ray_direction = pixel_center - camera_center;
-                    let ray = Ray {
+                    let mut ray = Ray {
                         orig: camera_center,
                         dir: ray_direction,
                     };
 
-                    write_color(&mut file, ray_color(&ray));
+                    write_color(&mut file, ray_color(&mut ray, world));
                 }
             }
         }
@@ -148,5 +116,24 @@ fn render_to_file(filename: &str) {
 }
 
 fn main() {
-    render_to_file("image.ppm");
+    let mut world = HittableList::new();
+    // Lets start with copies
+    world.add(Sphere {
+        center: Point3 {
+            x: 0.,
+            y: 0.,
+            z: -1.,
+        },
+        radius: 0.5,
+    });
+    world.add(Sphere {
+        center: Point3 {
+            x: 0.,
+            y: -100.5,
+            z: -1.,
+        },
+        radius: 100.,
+    });
+
+    render_to_file("image.ppm", &mut world);
 }
