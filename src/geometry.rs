@@ -24,17 +24,17 @@ trait Hittable {
     fn hit(&self, ray: &mut Ray, ray_tmin: f32, ray_tmax: f32, record: &mut HitRecord) -> bool;
 }
 
-pub struct HittableList {
-    objects: Vec<Box<dyn Hittable>>,
+pub struct HittableList<'a> {
+    objects: Vec<Box<dyn Hittable + 'a>>,
 }
 
-impl HittableList {
+impl<'a> HittableList<'a> {
     fn clear(&mut self) {
         self.objects.clear();
     }
 
-    fn add(&mut self, object: impl Hittable) {
-        todo!()
+    fn add(&mut self, object: impl Hittable + 'a) {
+        self.objects.push(Box::new(object));
     }
 }
 
