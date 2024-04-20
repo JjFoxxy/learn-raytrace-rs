@@ -40,7 +40,7 @@ impl ops::Neg for Vec3 {
     type Output = Self;
 
     fn neg(self) -> Self {
-        let mut res = self.clone();
+        let mut res = self;
         res.x = -res.x;
         res.y = -res.y;
         res.z = -res.z;
@@ -52,7 +52,7 @@ impl ops::Add for Vec3 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
-        let mut res = self.clone();
+        let mut res = self;
         res.x += rhs.x;
         res.y += rhs.y;
         res.z += rhs.z;
@@ -74,7 +74,7 @@ impl ops::Sub for Vec3 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
-        let mut res = self.clone();
+        let mut res = self;
         res.x -= rhs.x;
         res.y -= rhs.y;
         res.z -= rhs.z;
@@ -86,7 +86,7 @@ impl ops::Mul<f32> for Vec3 {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self {
-        let mut res = self.clone();
+        let mut res = self;
         res.x *= rhs;
         res.y *= rhs;
         res.z *= rhs;
@@ -98,7 +98,7 @@ impl ops::Mul<Vec3> for f32 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Vec3 {
-        let mut res = rhs.clone();
+        let mut res = rhs;
         res.x *= self;
         res.y *= self;
         res.z *= self;
@@ -121,7 +121,7 @@ impl ops::Div<f32> for Vec3 {
         if rhs == 0. {
             panic!("Can not divide by 0: Vec3");
         }
-        let mut res = self.clone();
+        let mut res = self;
         res.x /= rhs;
         res.y /= rhs;
         res.z /= rhs;

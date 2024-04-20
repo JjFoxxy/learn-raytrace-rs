@@ -26,6 +26,7 @@ pub trait Hittable {
     fn hit(&self, ray: &mut Ray, ray_t: &Interval) -> Option<HitRecord>;
 }
 
+#[derive(Default)]
 pub struct HittableList<'a> {
     objects: Vec<Box<dyn Hittable + 'a>>,
 }
@@ -98,6 +99,6 @@ impl Hittable for Sphere {
         let outward_normal = (record.point - self.center) / self.radius;
         record.set_face_normal(ray, &outward_normal);
 
-        return Some(record);
+        Some(record)
     }
 }
