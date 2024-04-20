@@ -1,10 +1,12 @@
 use std::{fs::File, io::Write};
 
 pub mod geometry;
+pub mod interval;
 pub mod ray;
 pub mod vec3;
 
-use crate::ray::Ray;
+use interval::Interval;
+use ray::Ray;
 use vec3::*;
 
 use crate::geometry::*;
@@ -18,9 +20,20 @@ fn write_color(file: &mut File, color: Color) {
 }
 
 fn ray_color(ray: &mut ray::Ray, world: &mut HittableList) -> Color {
-    if let Some(record) = world.hit(ray, 0., f32::INFINITY) {
+    if let Some(record) = world.hit(
+        ray,
+        &Interval {
+            min: 0.,
+            max: f32::INFINITY,
+        },
+    ) {
         return 0.5
-            * (record.normal + Color {x: 1., y: 1., z: 1.});
+            * (record.normal
+                + Color {
+                    x: 1.,
+                    y: 1.,
+                    z: 1.,
+                });
     }
 
     let unit_direction = ray.dir.unit_vector();

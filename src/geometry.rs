@@ -1,3 +1,4 @@
+use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::*;
 
@@ -22,7 +23,7 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &mut Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord>;
+    fn hit(&self, ray: &mut Ray, ray_t: &Interval) -> Option<HitRecord>;
 }
 
 pub struct HittableList<'a> {
@@ -44,12 +45,18 @@ impl<'a> HittableList<'a> {
         self.objects.push(Box::new(object));
     }
 
-    pub fn hit(&self, ray: &mut Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord> {
-        let mut closest_so_far = ray_tmax;
+    pub fn hit(&self, ray: &mut Ray, ray_t: &Interval) -> Option<HitRecord> {
+        let mut closest_so_far = ray_t.max;
         let mut result: Option<HitRecord> = None;
 
         for object in self.objects.iter() {
-            if let Some(record) = object.hit(ray, ray_tmin, closest_so_far) {
+            if let Some(record) = object.hit(
+                ray,
+                &Interval {
+                    min: ray_t.min,
+                    max: closest_so_far,
+                },
+            ) {
                 closest_so_far = record.t;
                 result = Some(record);
             }
@@ -65,7 +72,7 @@ pub struct Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &mut Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord> {
+    fn hit(&self, ray: &mut Ray, ray_t: &Interval) -> Option<HitRecord> {
         let mut record = HitRecord::default();
         let origin_center = ray.orig - self.center;
         let a = ray.dir.len_squared();
@@ -79,9 +86,9 @@ impl Hittable for Sphere {
         let sqrtd = discriminant.sqrt();
 
         let mut root = (-half_b - sqrtd) / a;
-        if (root <= ray_tmin) || (ray_tmax <= root) {
+        if !ray_t.surrounds(root) {
             root = (-half_b + sqrtd) / a;
-            if (root <= ray_tmin) || (ray_tmax <= root) {
+            if !ray_t.surrounds(root) {
                 return None;
             }
         }
