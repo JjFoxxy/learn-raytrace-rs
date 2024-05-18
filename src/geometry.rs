@@ -6,7 +6,7 @@ use crate::vec3::*;
 pub struct HitRecord {
     pub point: Point3,
     pub normal: Vec3,
-    pub t: f32,
+    pub t: f64,
     pub front_face: bool,
 }
 
@@ -69,7 +69,7 @@ impl<'a> HittableList<'a> {
 
 pub struct Sphere {
     pub center: Point3,
-    pub radius: f32,
+    pub radius: f64,
 }
 
 impl Hittable for Sphere {

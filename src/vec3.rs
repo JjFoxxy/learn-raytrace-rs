@@ -5,9 +5,9 @@ pub type Point3 = Vec3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec3 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 impl Vec3 {
@@ -15,15 +15,37 @@ impl Vec3 {
         *self / self.len()
     }
 
-    pub fn len_squared(&self) -> f32 {
+    fn random_in_unit_sphere() -> Self {
+        loop {
+            let p = Self::random(-1., 1.);
+            if p.len_squared() < 1. {
+                return p;
+            }
+        }
+    }
+
+    fn random_unit_vector() -> Self {
+        Self::random_in_unit_sphere().unit_vector()
+    }
+
+    pub fn random_on_hemisphere(normal: &Self) -> Self {
+        let v = Self::random_unit_vector();
+        if v.dot(normal) > 0. {
+            v
+        } else {
+            -v
+        }
+    }
+
+    pub fn len_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
-    pub fn len(&self) -> f32 {
+    pub fn len(&self) -> f64 {
         self.len_squared().sqrt()
     }
 
-    pub fn dot(&self, rhs: &Self) -> f32 {
+    pub fn dot(&self, rhs: &Self) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
@@ -32,6 +54,23 @@ impl Vec3 {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
             z: self.x * rhs.y - self.y * rhs.x,
+        }
+    }
+
+    pub fn random_unit() -> Self {
+        Vec3 {
+            x: rand::random::<f64>(),
+            y: rand::random::<f64>(),
+            z: rand::random::<f64>(),
+        }
+    }
+
+    pub fn random(min: f64, max: f64) -> Self {
+        let scale = max - min;
+        Vec3 {
+            x: min + scale * rand::random::<f64>(),
+            y: min + scale * rand::random::<f64>(),
+            z: min + scale * rand::random::<f64>(),
         }
     }
 }
@@ -82,10 +121,10 @@ impl ops::Sub for Vec3 {
     }
 }
 
-impl ops::Mul<f32> for Vec3 {
+impl ops::Mul<f64> for Vec3 {
     type Output = Self;
 
-    fn mul(self, rhs: f32) -> Self {
+    fn mul(self, rhs: f64) -> Self {
         let mut res = self;
         res.x *= rhs;
         res.y *= rhs;
@@ -94,7 +133,7 @@ impl ops::Mul<f32> for Vec3 {
     }
 }
 
-impl ops::Mul<Vec3> for f32 {
+impl ops::Mul<Vec3> for f64 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Vec3 {
@@ -106,18 +145,18 @@ impl ops::Mul<Vec3> for f32 {
     }
 }
 
-impl ops::MulAssign<f32> for Vec3 {
-    fn mul_assign(&mut self, rhs: f32) {
+impl ops::MulAssign<f64> for Vec3 {
+    fn mul_assign(&mut self, rhs: f64) {
         self.x *= rhs;
         self.y *= rhs;
         self.z *= rhs;
     }
 }
 
-impl ops::Div<f32> for Vec3 {
+impl ops::Div<f64> for Vec3 {
     type Output = Self;
 
-    fn div(self, rhs: f32) -> Self {
+    fn div(self, rhs: f64) -> Self {
         if rhs == 0. {
             panic!("Can not divide by 0: Vec3");
         }
@@ -129,8 +168,8 @@ impl ops::Div<f32> for Vec3 {
     }
 }
 
-impl ops::DivAssign<f32> for Vec3 {
-    fn div_assign(&mut self, rhs: f32) {
+impl ops::DivAssign<f64> for Vec3 {
+    fn div_assign(&mut self, rhs: f64) {
         if rhs == 0. {
             panic!("Can not divide by 0: Vec3");
         }

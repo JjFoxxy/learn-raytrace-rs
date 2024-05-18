@@ -5,7 +5,7 @@ use std::{fs::File, io::Write};
 
 #[derive(Default)]
 pub struct Camera {
-    aspect_ratio: f32,
+    aspect_ratio: f64,
     image_width: u32,
     image_height: u32,
     camera_center: Point3,
@@ -13,15 +13,17 @@ pub struct Camera {
     pixel_delta_u: Point3,
     pixel_delta_v: Point3,
     samples_per_pixel: u32,
-    pixel_samples_scale: f32,
+    pixel_samples_scale: f64,
+    max_depth: u32,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f32, image_width: u32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: u32) -> Self {
         Camera {
             aspect_ratio,
             image_width,
             samples_per_pixel: 100,
+            max_depth: 50,
             ..Default::default()
         }
     }
@@ -56,7 +58,7 @@ impl Camera {
                         let mut pixel_color = Color::default();
                         for _ in 0..self.samples_per_pixel {
                             let mut ray = self.get_ray_from_pixel_position(i, j);
-                            pixel_color += Self::ray_color(&mut ray, world);
+                            pixel_color += Self::ray_color(&mut ray, self.max_depth, world);
                         }
                         Self::write_color(&mut file, self.pixel_samples_scale * pixel_color);
                     }
@@ -70,12 +72,12 @@ impl Camera {
     }
 
     pub fn initialize(&mut self) {
-        self.image_height = ((self.image_width as f32) / self.aspect_ratio) as u32;
+        self.image_height = ((self.image_width as f64) / self.aspect_ratio) as u32;
         if self.image_height == 0 {
             self.image_height = 1;
         }
 
-        self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f32;
+        self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
 
         self.camera_center = Point3 {
             x: 0.,
@@ -83,10 +85,10 @@ impl Camera {
             z: 0.,
         };
 
-        let focal_length: f32 = 1.0;
-        let viewport_height: f32 = 2.;
-        let viewport_width: f32 =
-            viewport_height * ((self.image_width as f32) / (self.image_height as f32));
+        let focal_length: f64 = 1.0;
+        let viewport_height: f64 = 2.;
+        let viewport_width: f64 =
+            viewport_height * ((self.image_width as f64) / (self.image_height as f64));
 
         // Horizontal vector
         let viewport_u = Vec3 {
@@ -100,8 +102,8 @@ impl Camera {
             z: 0.,
         };
 
-        self.pixel_delta_u = viewport_u / (self.image_width as f32);
-        self.pixel_delta_v = viewport_v / (self.image_height as f32);
+        self.pixel_delta_u = viewport_u / (self.image_width as f64);
+        self.pixel_delta_v = viewport_v / (self.image_height as f64);
 
         let viewport_upper_left = self.camera_center
             - Vec3 {
@@ -114,21 +116,29 @@ impl Camera {
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 
-    fn ray_color(ray: &mut Ray, world: &HittableList) -> Color {
+    fn ray_color(ray: &mut Ray, depth: u32, world: &HittableList) -> Color {
+        // When too many colisions - return black
+        if depth == 0 {
+            return Color::default();
+        }
+
         if let Some(record) = world.hit(
             ray,
             &Interval {
                 min: 0.,
-                max: f32::INFINITY,
+                max: f64::INFINITY,
             },
         ) {
+            let direction = Vec3::random_on_hemisphere(&record.normal);
             return 0.5
-                * (record.normal
-                    + Color {
-                        x: 1.,
-                        y: 1.,
-                        z: 1.,
-                    });
+                * Self::ray_color(
+                    &mut Ray {
+                        orig: record.point,
+                        dir: direction,
+                    },
+                    depth - 1,
+                    world,
+                );
         }
 
         let unit_direction = ray.dir.unit_vector();
@@ -149,8 +159,8 @@ impl Camera {
 
     fn sample_square() -> Vec3 {
         Vec3 {
-            x: rand::random::<f32>() - 0.5,
-            y: rand::random::<f32>() - 0.5,
+            x: rand::random::<f64>() - 0.5,
+            y: rand::random::<f64>() - 0.5,
             z: 0.,
         }
     }
@@ -158,8 +168,8 @@ impl Camera {
     fn get_ray_from_pixel_position(&self, x: u32, y: u32) -> Ray {
         let offset = Self::sample_square();
         let pixel_sample = self.pixel00_loc
-            + ((x as f32 + offset.x) * self.pixel_delta_u)
-            + ((y as f32 + offset.y) * self.pixel_delta_v);
+            + ((x as f64 + offset.x) * self.pixel_delta_u)
+            + ((y as f64 + offset.y) * self.pixel_delta_v);
 
         let ray_origin = self.camera_center;
         let ray_direction = pixel_sample - ray_origin;
