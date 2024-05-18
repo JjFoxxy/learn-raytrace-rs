@@ -4,6 +4,10 @@ pub struct Interval {
 }
 
 impl Interval {
+    pub fn new(min: f32, max: f32) -> Self {
+        Interval { min, max }
+    }
+
     pub fn contains(&self, x: f32) -> bool {
         (self.min..=self.max).contains(&x)
     }
@@ -21,6 +25,10 @@ impl Interval {
 
     pub fn universe() -> Self {
         Self::default()
+    }
+
+    pub fn clamp(&self, x: f32) -> f32 {
+        x.clamp(self.min, self.max)
     }
 }
 
