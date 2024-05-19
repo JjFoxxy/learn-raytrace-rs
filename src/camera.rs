@@ -28,11 +28,19 @@ impl Camera {
         }
     }
 
+    fn linear_to_gamma(linear_component: f64) -> f64 {
+        if linear_component > 0. {
+            linear_component.sqrt()
+        } else {
+            0.
+        }
+    }
+
     fn write_color(file: &mut File, color: Color) {
         let intensity = Interval::new(0., 0.999);
-        let ir = (256. * intensity.clamp(color.x)) as u32;
-        let ig = (256. * intensity.clamp(color.y)) as u32;
-        let ib = (256. * intensity.clamp(color.z)) as u32;
+        let ir = (256. * intensity.clamp(Self::linear_to_gamma(color.x))) as u32;
+        let ig = (256. * intensity.clamp(Self::linear_to_gamma(color.y))) as u32;
+        let ib = (256. * intensity.clamp(Self::linear_to_gamma(color.z))) as u32;
 
         file.write_fmt(format_args!("{ir} {ig} {ib}\n")).unwrap();
     }
