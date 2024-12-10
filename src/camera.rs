@@ -1,7 +1,8 @@
 use crate::interval::Interval;
 use crate::vec3::*;
 use crate::{geometry::HittableList, ray::Ray};
-use std::{fs::File, io::Write};
+use raster::error::RasterError;
+use raster::Image;
 
 #[derive(Default)]
 pub struct Camera {
@@ -36,13 +37,19 @@ impl Camera {
         }
     }
 
-    fn write_color(file: &mut File, color: Color) {
+    fn write_color(image: &mut Image, color: Color, x: u32, y: u32) -> Result<(), RasterError> {
         let intensity = Interval::new(0., 0.999);
         let ir = (256. * intensity.clamp(Self::linear_to_gamma(color.x))) as u32;
         let ig = (256. * intensity.clamp(Self::linear_to_gamma(color.y))) as u32;
         let ib = (256. * intensity.clamp(Self::linear_to_gamma(color.z))) as u32;
 
-        file.write_fmt(format_args!("{ir} {ig} {ib}\n")).unwrap();
+        let color = raster::Color {
+            r: ir as u8,
+            g: ig as u8,
+            b: ib as u8,
+            a: 255,
+        };
+        image.set_pixel(x as i32, y as i32, color)
     }
 
     pub fn render_to_file(&mut self, filename: &str, world: &HittableList) {
@@ -50,33 +57,33 @@ impl Camera {
 
         println!("Rendering to the file {filename}");
 
-        let open_result = File::create(filename);
+        let mut image = Image::blank(self.image_width as i32, self.image_height as i32);
 
-        match open_result {
-            Ok(mut file) => {
-                file.write_all("P3\n".as_bytes()).unwrap();
-                file.write_fmt(format_args!("{} {}\n", self.image_width, self.image_height))
-                    .unwrap();
-                file.write_all("255\n".as_bytes()).unwrap();
+        for j in 0..self.image_height {
+            let remaining = self.image_height - j;
 
-                for j in 0..self.image_height {
-                    let remaining = self.image_height - j;
-                    println!("Scanlines remaining: {remaining}");
-                    for i in 0..self.image_width {
-                        let mut pixel_color = Color::default();
-                        for _ in 0..self.samples_per_pixel {
-                            let mut ray = self.get_ray_from_pixel_position(i, j);
-                            pixel_color += Self::ray_color(&mut ray, self.max_depth, world);
-                        }
-                        Self::write_color(&mut file, self.pixel_samples_scale * pixel_color);
-                    }
+            println!("Scanlines remaining: {remaining}");
+
+            for i in 0..self.image_width {
+                let mut pixel_color = Color::default();
+                for _ in 0..self.samples_per_pixel {
+                    let mut ray = self.get_ray_from_pixel_position(i, j);
+                    pixel_color += Self::ray_color(&mut ray, self.max_depth, world);
+                }
+
+                if Self::write_color(&mut image, self.pixel_samples_scale * pixel_color, i, j)
+                    .is_err()
+                {
+                    println!("Error writing to the image. Aborting...");
+                    return;
                 }
             }
-            Err(e) => {
-                println!("Unable to open file for rendering: {e}");
-            }
         }
-        println!("Done!");
+        if raster::save(&image, filename).is_ok() {
+            println!("Done!");
+        } else {
+            println!("Error saving the image. Aborting...");
+        }
     }
 
     pub fn initialize(&mut self) {
