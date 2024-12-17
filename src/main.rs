@@ -29,7 +29,9 @@ fn main() {
         radius: 100.,
     });
 
-    let mut camera = Camera::new(16. / 9., 400);
+    let aspect_ratio = 16. / 9.;
+    let image_width = 400;
+    let mut camera = Camera::new(aspect_ratio, image_width);
 
-    camera.render_to_file("image.ppm", &world);
+    camera.render_to_file("image.png", &world);
 }

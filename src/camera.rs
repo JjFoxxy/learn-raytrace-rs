@@ -100,7 +100,13 @@ impl Camera {
             z: 0.,
         };
 
+        // The focal lenght is the distance between the camera center and the
+        // viewport plane
         let focal_length: f64 = 1.0;
+
+        // Viewport heigt is fixed for now and we use actual image parameters to
+        // calculate the viewport width because it might differ from the original
+        // aspect ratio
         let viewport_height: f64 = 2.;
         let viewport_width: f64 =
             viewport_height * ((self.image_width as f64) / (self.image_height as f64));
@@ -117,6 +123,7 @@ impl Camera {
             z: 0.,
         };
 
+        // Delta vectors from pixel to pixel
         self.pixel_delta_u = viewport_u / (self.image_width as f64);
         self.pixel_delta_v = viewport_v / (self.image_height as f64);
 
