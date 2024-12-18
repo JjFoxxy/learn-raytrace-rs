@@ -151,16 +151,26 @@ impl Camera {
                 max: f64::INFINITY,
             },
         ) {
-            let direction = record.normal + Vec3::random_unit();
-            return 0.5
-                * Self::ray_color(
-                    &mut Ray {
-                        orig: record.point,
-                        dir: direction,
-                    },
-                    depth - 1,
-                    world,
-                );
+            if let Some((attenuation, mut scattered)) = record.material.scatter(ray, &record) {
+                return attenuation
+                    * Self::ray_color(
+                        &mut scattered,
+                        depth - 1,
+                        world,
+                    );
+            } else {
+                return Color::default()
+            }
+            // let direction = record.normal + Vec3::random_unit();
+            // return 0.5
+            //     * Self::ray_color(
+            //         &mut Ray {
+            //             orig: record.point,
+            //             dir: direction,
+            //         },
+            //         depth - 1,
+            //         world,
+            //     );
         }
 
         let unit_direction = ray.dir.unit_vector();

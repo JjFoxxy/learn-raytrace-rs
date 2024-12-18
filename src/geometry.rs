@@ -1,11 +1,13 @@
+use std::rc::Rc;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::*;
+use crate::material::Material;
 
-#[derive(Default)]
 pub struct HitRecord {
     pub point: Point3,
     pub normal: Vec3,
+    pub material: Rc<dyn Material>,
     pub t: f64,
     pub front_face: bool,
 }
@@ -19,6 +21,16 @@ impl HitRecord {
         } else {
             -*outward_normal
         };
+    }
+
+    fn make_default(material: Rc<dyn Material>) -> Self {
+        HitRecord {
+            point: Point3::default(),
+            normal: Vec3::default(),
+            material,
+            t: 0.,
+            front_face: false,
+        }
     }
 }
 
@@ -70,11 +82,12 @@ impl<'a> HittableList<'a> {
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
+    pub material: Rc<dyn Material>,
 }
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &mut Ray, ray_t: &Interval) -> Option<HitRecord> {
-        let mut record = HitRecord::default();
+        let mut record = HitRecord::make_default(self.material.clone());
         let origin_center = ray.orig - self.center;
         let a = ray.dir.len_squared();
         let half_b = origin_center.dot(&ray.dir);

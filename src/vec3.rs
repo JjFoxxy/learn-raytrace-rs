@@ -11,6 +11,15 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+    pub fn reflect(v: &Self, n: &Self) -> Self {
+        *v - *n * v.dot(n) * 2.
+    }
+
+    pub fn near_zero(&self) -> bool {
+        const DELTA: f64 = 1e-8;
+        self.x.abs() < DELTA && self.y.abs() < DELTA && self.z.abs() < DELTA
+    }
+
     pub fn unit_vector(&self) -> Self {
         *self / self.len()
     }
@@ -24,7 +33,7 @@ impl Vec3 {
         }
     }
 
-    fn random_unit_vector() -> Self {
+    pub fn random_unit_vector() -> Self {
         Self::random_in_unit_sphere().unit_vector()
     }
 
@@ -130,6 +139,18 @@ impl ops::Mul<f64> for Vec3 {
         res.y *= rhs;
         res.z *= rhs;
         res
+    }
+}
+
+impl ops::Mul<Vec3> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, rhs: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
     }
 }
 
