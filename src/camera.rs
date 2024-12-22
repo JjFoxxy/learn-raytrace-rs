@@ -152,14 +152,9 @@ impl Camera {
             },
         ) {
             if let Some((attenuation, mut scattered)) = record.material.scatter(ray, &record) {
-                return attenuation
-                    * Self::ray_color(
-                        &mut scattered,
-                        depth - 1,
-                        world,
-                    );
+                return attenuation * Self::ray_color(&mut scattered, depth - 1, world);
             } else {
-                return Color::default()
+                return Color::default();
             }
             // let direction = record.normal + Vec3::random_unit();
             // return 0.5

@@ -1,15 +1,15 @@
 pub mod camera;
 pub mod geometry;
 pub mod interval;
+pub mod material;
 pub mod ray;
 pub mod vec3;
-pub mod material;
 
 use std::rc::Rc;
 
 use camera::Camera;
-use vec3::*;
 use material::*;
+use vec3::*;
 
 use geometry::*;
 
@@ -24,6 +24,7 @@ fn main() {
             z: 0.,
         },
     };
+
     let material_center = Lambertian {
         albedo: Color {
             x: 0.1,
@@ -31,20 +32,25 @@ fn main() {
             z: 0.5,
         },
     };
-    let material_left = Metal {
-        albedo: Color {
+
+    let material_left = Metal::new(
+        Color {
             x: 0.8,
             y: 0.8,
             z: 0.8,
         },
-    };
-    let material_right = Metal {
-        albedo: Color {
+        0.3,
+    );
+
+    let material_right = Metal::new(
+        Color {
             x: 0.8,
             y: 0.6,
             z: 0.2,
         },
-    };
+        1.0,
+    );
+
     // Lets start with copies
     world.add(Sphere {
         center: Point3 {
